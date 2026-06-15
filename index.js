@@ -260,9 +260,18 @@ function applyLogLevel(level) {
  * @param {jQuery} $popup - 需要居中的弹窗的jQuery对象
  */
 function centerPopup($popup) {
-    if (!$popup || $popup.length === 0 || $popup.is(':hidden')) {
-        return;
-    }
+    // 检查是否有保存的位置状态，如果有则不强制居中
+    try {
+        const saved = localStorage.getItem("hide_helper_popup_state");
+        if (saved) {
+            const state = JSON.parse(saved);
+            if (state.left !== undefined && state.top !== undefined) {
+                // 已有保存的位置，不强制居中
+                Logger.debug("使用保存的弹窗位置，跳过自动居中");
+                return;
+            }
+        }
+    } catch (e) {}
 
     // --- 改回 JS 实时计算居中 ---
     // 解决移动端浏览器因视口高度变化导致的 CSS 居中定位失效问题
@@ -280,9 +289,6 @@ function centerPopup($popup) {
     // 安全边界防溢出（留出至少 10px 的边距，防止极小屏幕下跑偏到屏幕外）
     top = Math.max(10, top);
     left = Math.max(10, left);
-
-    $popup.css({
-        top: top + 'px',
         left: left + 'px',
         transform: 'none', // 清除可能存在的 CSS 缩放和平移干扰
         margin: '0'
@@ -795,6 +801,9 @@ function createPopup() {
                     </div>
                 </div>
             </div>
+            <!-- 拉伸手柄 -->
+            <div class="hide-helper-resize-handle top-right" data-resize="top-right"></div>
+            <div class="hide-helper-resize-handle bottom-right" data-resize="bottom-right"></div>
         </div>`;
     Logger.debug('追加弹窗 HTML 到 body');
     $('body').append(popupHtml);
@@ -1804,10 +1813,136 @@ function logEnvironmentDetails() {
     Logger.debug(`【调试诊断】Tavern Helper 版本: ${thVersion}`);
     Logger.debug(`【调试诊断】Hide Helper 内部设置:`, extension_settings[extensionName]);
 }
+// === 弹窗拖动和大小调整功能 ===
+function setupPopupDragAndResize() {
+    const $popup = $("#hide-helper-popup");
+    const $dragHandle = $popup.find(".popup-tabs-nav");
+    const STORAGE_KEY = "hide_helper_popup_state";
+
+    // 状态变量
+    let isDragging = false;
+    let isResizing = false;
+    let resizeDirection = "";
+    let startX = 0, startY = 0;
+    let startWidth = 0, startHeight = 0, startLeft = 0, startTop = 0;
+
+    // 加载保存的状态
+    function loadPopupState() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const state = JSON.parse(saved);
+                if (state.width) $popup.css("width", state.width + "px");
+                if (state.height) $popup.css("height", state.height + "px");
+                if (state.left !== undefined) $popup.css("left", state.left + "px");
+                if (state.top !== undefined) $popup.css("top", state.top + "px");
+                Logger.debug("已加载弹窗保存状态");
+            }
+        } catch (e) {
+            Logger.warn("加载弹窗状态失败:", e);
+        }
+    }
+
+    // 保存状态
+    function savePopupState() {
+        try {
+            const state = {
+                width: $popup.width(),
+                height: $popup.height(),
+                left: parseInt($popup.css("left")),
+                top: parseInt($popup.css("top"))
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+            Logger.warn("保存弹窗状态失败:", e);
+        }
+    }
+
+    // 拖动功能
+    $dragHandle.on("mousedown", function(e) {
+        // 排除点击标签按钮的情况
+        if ($(e.target).hasClass("tab-button")) return;
+        
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startLeft = parseInt($popup.css("left"));
+        startTop = parseInt($popup.css("top"));
+        
+        $popup.css({ transform: "none", margin: 0 });
+        e.preventDefault();
+    });
+
+    // 拉伸功能
+    $popup.find(".hide-helper-resize-handle").on("mousedown", function(e) {
+        isResizing = true;
+        resizeDirection = $(this).data("resize");
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = $popup.width();
+        startHeight = $popup.height();
+        startLeft = parseInt($popup.css("left"));
+        startTop = parseInt($popup.css("top"));
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    // 鼠标移动
+    $(document).on("mousemove.hideHelperPopup", function(e) {
+        if (isDragging) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            $popup.css({
+                left: Math.max(0, startLeft + dx) + "px",
+                top: Math.max(0, startTop + dy) + "px"
+            });
+        }
+        
+        if (isResizing) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            if (resizeDirection === "bottom-right") {
+                $popup.css({
+                    width: Math.max(320, startWidth + dx) + "px",
+                    height: Math.max(300, startHeight + dy) + "px"
+                });
+            } else if (resizeDirection === "top-right") {
+                const newWidth = Math.max(320, startWidth + dx);
+                const newHeight = Math.max(300, startHeight - dy);
+                const newTop = startTop + (startHeight - newHeight);
+                $popup.css({
+                    width: newWidth + "px",
+                    height: newHeight + "px",
+                    top: Math.max(0, newTop) + "px"
+                });
+            }
+        }
+    });
+
+    // 鼠标释放
+    $(document).on("mouseup.hideHelperPopup", function() {
+        if (isDragging || isResizing) {
+            savePopupState();
+        }
+        isDragging = false;
+        isResizing = false;
+        resizeDirection = "";
+    });
+
+    // 弹窗打开时加载状态
+    loadPopupState();
+    Logger.debug("弹窗拖动和大小调整功能已初始化");
+}
+
+
 
 // 设置UI元素的事件监听器
 function setupEventListeners() {
     Logger.debug('设置事件监听器');
+
+    // --- 弹窗拖动和大小调整功能 ---
+    setupPopupDragAndResize();
 
     // --- 聊天统计 (Token Stats) 事件监听 ---
 

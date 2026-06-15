@@ -146,11 +146,34 @@
 
 /* --- 弹窗通用样式 --- */
 .hide-helper-popup, .hide-helper-instructions-popup {
-    position: fixed; max-height: 90vh; width: 90%; max-width: 420px;
+    position: fixed; min-height: 300px; min-width: 320px; width: 450px; height: 600px;
     background: var(--hh-background-popup); border: 1px solid var(--hh-border-color);
     border-radius: 12px; z-index: 9999; padding: 20px 25px;
     box-shadow: 0 4px 20px var(--hh-color-black-shadow); display: none; flex-direction: column; gap: 20px;
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); animation: hhFadeIn 0.3s ease-out;
+    resize: none; overflow: hidden; user-select: none;
+}
+/* --- 弹窗拖动区域（标题栏） --- */
+#hide-helper-popup .popup-tabs-nav {
+    cursor: move; user-select: none;
+}
+/* --- 拉伸手柄样式 --- */
+.hide-helper-resize-handle {
+    position: absolute; z-index: 10000; user-select: none;
+}
+/* 右上角拉伸手柄 */
+.hide-helper-resize-handle.top-right {
+    top: 0; right: 0; width: 20px; height: 20px; cursor: nesw-resize;
+    border-top-right-radius: 12px;
+}
+/* 右下角拉伸手柄 */
+.hide-helper-resize-handle.bottom-right {
+    bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize;
+    border-bottom-right-radius: 12px;
+}
+/* 拉伸手柄悬停效果 */
+.hide-helper-resize-handle:hover {
+    background: var(--hh-accent-color-bg-light);
 }
 @keyframes hhFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
@@ -246,7 +269,7 @@
 
 #hide-helper-popup .popup-tabs-content .tab-panel { display: none !important; animation: hhFadeIn 0.3s ease-out !important; position: relative !important; box-sizing: border-box !important; }
 #hide-helper-popup .popup-tabs-content .tab-panel.active { display: block !important; }
-#hide-helper-popup .popup-tabs-content { max-height: 470px; overflow-y: auto; scrollbar-width: none !important; flex: 1 1 auto; }
+#hide-helper-popup .popup-tabs-content { overflow-y: auto; scrollbar-width: none !important; flex: 1 1 auto; }
 #hide-helper-popup *::-webkit-scrollbar { display: none !important; }
 #hide-helper-popup * { scrollbar-width: none !important; }
 

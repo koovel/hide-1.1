@@ -1498,12 +1498,16 @@ function renderTokenStatsContent(totalTokens, chatTokens, wiTokens, otherTokens,
 
     // 渲染条目列表
     const books = Object.keys(statsObj);
-    let filtersHtml = '';
+    let filtersHtml = "";
     if (books.length > 1) {
+        // 使用下拉选择框替代按钮列表，避免条目过多时拥挤
         filtersHtml = `
             <div class="tub-book-filters">
                 <button class="tub-book-btn active" data-book="all">所有条目</button>
-                ${books.map(b => `<button class="tub-book-btn" data-book="${b}">${b}</button>`).join('')}
+                <select class="tub-book-select" id="tub-book-select">
+                    <option value="" disabled selected>选择世界书...</option>
+                    ${books.map(b => `<option value="${b}">${b}</option>`).join("")}
+                </select>
             </div>
         `;
     }
@@ -1617,16 +1621,32 @@ function renderTokenStatsContent(totalTokens, chatTokens, wiTokens, otherTokens,
     renderEntriesList();
 
     // 绑定书籍按钮事件
+    // 绑定书籍筛选事件（按钮 + 下拉选择框）
     if (books.length > 1) {
-        const btns = document.querySelectorAll('.tub-book-btn');
+        const btns = document.querySelectorAll(".tub-book-btn");
+        const select = document.getElementById("tub-book-select");
+        
+        // "所有条目"按钮点击事件
         btns.forEach(btn => {
             btn.onclick = () => {
-                btns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentBookFilter = btn.getAttribute('data-book');
+                btns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                currentBookFilter = btn.getAttribute("data-book");
+                if (select) select.value = ""; // 重置下拉框
                 renderEntriesList();
             };
         });
+        
+        // 下拉选择框change事件
+        if (select) {
+            select.onchange = () => {
+                if (select.value) {
+                    btns.forEach(b => b.classList.remove("active"));
+                    currentBookFilter = select.value;
+                    renderEntriesList();
+                }
+            };
+        }
     }
 
     // 绑定搜索框事件

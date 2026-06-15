@@ -342,6 +342,9 @@
 #token-stats-panel .tub-book-btn:hover { background: var(--hh-btn-secondary-hover-bg) !important; color: var(--hh-text-primary) !important; }
 #token-stats-panel .tub-book-btn.active { background: var(--hh-text-primary) !important; color: var(--hh-stats-book) !important; }
 #token-stats-panel .tub-search-wrapper { display: flex !important; align-items: center !important; gap: 5px !important; position: relative !important; }
+#token-stats-panel .tub-book-select { background: var(--hh-background-secondary) !important; border: none !important; color: var(--hh-text-secondary) !important; padding: 5px 12px !important; border-radius: 15px !important; font-size: 0.75em !important; cursor: pointer !important; transition: all 0.2s !important; font-weight: 500 !important; outline: none !important; max-width: 200px !important; }
+#token-stats-panel .tub-book-select:hover { background: var(--hh-btn-secondary-hover-bg) !important; color: var(--hh-text-primary) !important; }
+#token-stats-panel .tub-book-select option { background: var(--hh-background-popup) !important; color: var(--hh-text-primary) !important; }
 #token-stats-panel .tub-search-icon { cursor: pointer !important; color: var(--hh-text-secondary) !important; transition: color 0.2s !important; }
 #token-stats-panel .tub-search-icon:hover { color: var(--hh-accent-color) !important; }
 #token-stats-panel .tub-search-input { width: 0 !important; opacity: 0 !important; padding: 0 !important; border: none !important; border-bottom: 2px solid var(--hh-accent-color) !important; outline: none !important; background: transparent !important; font-size: 0.8em !important; color: var(--hh-text-primary) !important; transition: width 0.3s ease, opacity 0.3s ease, padding 0.3s ease !important; pointer-events: none !important; }

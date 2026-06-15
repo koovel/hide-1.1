@@ -260,6 +260,10 @@ function applyLogLevel(level) {
  * @param {jQuery} $popup - 需要居中的弹窗的jQuery对象
  */
 function centerPopup($popup) {
+    if (!$popup || $popup.length === 0 || $popup.is(":hidden")) {
+        return;
+    }
+
     // 检查是否有保存的位置状态，如果有则不强制居中
     try {
         const saved = localStorage.getItem("hide_helper_popup_state");
@@ -289,6 +293,9 @@ function centerPopup($popup) {
     // 安全边界防溢出（留出至少 10px 的边距，防止极小屏幕下跑偏到屏幕外）
     top = Math.max(10, top);
     left = Math.max(10, left);
+
+    $popup.css({
+        top: top + 'px',
         left: left + 'px',
         transform: 'none', // 清除可能存在的 CSS 缩放和平移干扰
         margin: '0'
@@ -1813,6 +1820,8 @@ function logEnvironmentDetails() {
     Logger.debug(`【调试诊断】Tavern Helper 版本: ${thVersion}`);
     Logger.debug(`【调试诊断】Hide Helper 内部设置:`, extension_settings[extensionName]);
 }
+
+// 设置UI元素的事件监听器
 // === 弹窗拖动和大小调整功能 ===
 function setupPopupDragAndResize() {
     const $popup = $("#hide-helper-popup");
@@ -1936,8 +1945,6 @@ function setupPopupDragAndResize() {
 }
 
 
-
-// 设置UI元素的事件监听器
 function setupEventListeners() {
     Logger.debug('设置事件监听器');
 
